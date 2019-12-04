@@ -1,0 +1,35 @@
+server:
+    port: 8081
+spring:
+    application:
+        id: gateway-service
+        name: gateway-service  
+    cloud:
+        consul:
+            instance-id: "${spring.cloud.client.hostname}:${spring.application.name}:${random.int[1,999999]}"
+            enabled: true
+            host: localhost
+            port: 8500
+            config:
+                enabled: true
+        gateway:
+            discovery:
+                locator:
+                    enabled: true
+            routes:
+            -   id: parameter-service-url
+                uri: lb://parameter-service
+                predicates:
+                -   Path=/parameter/**
+                filters:
+                -   RewritePath=/parameter/(?<segment>.*), /$\{segment}
+            -   id: common-service-url
+                uri: lb://common-service
+                predicates:
+                -   Path=/common/**
+                filters:
+                -   RewritePath=/common/(?<segment>.*), /$\{segment}
+management:
+    endpoint:
+        service-registry:
+            enabled: true
